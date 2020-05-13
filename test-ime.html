@@ -1,6 +1,5 @@
 <body>
   <div id="root">
-    <input id="readonly" readonly/>
     <input id="readwrite"/>
     <div id="result"></div>
   </div>
@@ -9,7 +8,6 @@
 <script>
   var rootEl = document.getElementById('root')
   var readWriteEl = document.getElementById('readwrite')
-  var readOnlyEl = document.getElementById('readonly')
   var resultEl = document.getElementById('result')
 
   var isComposing = false
@@ -20,13 +18,9 @@
   var isExpectingCopyCut = false
   var isExpectingPaste = false
 
-  function activeInput() {
-    return readWriteEl === document.activeElement ? readWriteEl : readOnlyEl
-  }
-
   rootEl.addEventListener('copy', function(e) {
     console.warn('copy')
-    if (activeInput().selectionStart === activeInput().selectionEnd) {
+    if (readWriteEl.selectionStart === readWriteEl.selectionEnd) {
       console.warn('quitting copy early to mimic browsers that require a non empty selection to copy')
       return
     }
@@ -36,7 +30,7 @@
 
   rootEl.addEventListener('cut', function(e) {
     console.warn('cut')
-    if (activeInput().selectionStart === activeInput().selectionEnd) {
+    if (readWriteEl.selectionStart === readWriteEl.selectionEnd) {
       console.warn('quitting copy early to mimic browsers that require a non empty selection to copy')
       return
     }
@@ -52,17 +46,17 @@
   });
 
   function updateFocus() {
-    if (document.isExpectingCopyCut) {
-      if (document.activeElement !== readOnlyEl) {
-        readOnlyEl.focus()
-      }
-      readOnlyEl.value = " "
-      readOnlyEl.selectionStart = 0
-      readOnlyEl.selectionEnd = 1
+    console.warn('updating focus')
+    if (document.activeElement !== readWriteEl) {
+      readWriteEl.focus()
+    }
+
+    if (isExpectingCopyCut) {
+      readWriteEl.value = " "
+      readWriteEl.selectionStart = 0
+      readWriteEl.selectionEnd = 1
     } else {
-      if (document.activeElement !== readWriteEl) {
-        readWriteEl.focus()
-      }
+      console.warn('clearing')
       readWriteEl.focus()
       readWriteEl.value = ""
     }
@@ -72,7 +66,7 @@
     if (isExpectingCopyCut === val) {
       return
     }
-    isExpectingCopyCut = true
+    isExpectingCopyCut = val
     updateFocus()
   }
 
@@ -80,7 +74,7 @@
     if (isExpectingPaste === val) {
       return
     }
-    isExpectingPaste = true
+    isExpectingPaste = val
     updateFocus()
   }
 
@@ -94,7 +88,7 @@
     }
   }
   readWriteEl.addEventListener('keydown', keyDownCallback)
-  readOnlyEl.addEventListener('keydown', keyDownCallback)
+  // readOnlyEl.addEventListener('keydown', keyDownCallback)
 
   function keyUpCallback(e) {
     setExpectingCopyCut(false)
@@ -102,7 +96,7 @@
   }
 
   readWriteEl.addEventListener('keyup', keyUpCallback)
-  readOnlyEl.addEventListener('keyup', keyUpCallback)
+  // readOnlyEl.addEventListener('keyup', keyUpCallback)
 
   readWriteEl.addEventListener('compositionstart', function (e) {
     console.warn('compositionstart clearing element.value and composition')
@@ -117,9 +111,8 @@
   })
   
   readWriteEl.addEventListener('input', function (e) {
-    console.warn('input', 'element.value', readWriteEl, readWriteEl.value)
+    console.warn('input', 'element.value', readWriteEl.value, 'previous', previousComposition)
 
-    console.warn('input', 'previous composition', previousComposition, previousComposition.length)
     if (previousComposition.length) {
       resultEl.innerHTML = resultEl.innerHTML
         .slice(0, resultEl.innerHTML.length - previousComposition.length)
@@ -128,7 +121,7 @@
     
     if (isComposing) {
       previousComposition = readWriteEl.value
-      console.warn('input', 'is composing, so previous composition is', readWriteEl, readWriteEl.value)
+      console.warn('input', 'is composing, so new previous composition is', readWriteEl.value)
     } else {
       previousComposition = ""
       readWriteEl.value = ""
@@ -136,5 +129,10 @@
     }
     
     e.preventDefault()
+  })
+
+  readWriteEl.addEventListener('focus', function (e) {
+    isComposing = false
+    previousComposition = ""
   })
 </script>
