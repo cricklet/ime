@@ -1,14 +1,17 @@
 <body>
   <div id="root">
-    <input id="readwrite"/>
+    <input id="readwrite" placeholder="text" />
+    <input id="readonly" placeholder="copy" readonly />
     <div id="result"></div>
   </div>
 </body>
 
 <script>
   var rootEl = document.getElementById('root')
-  var readWriteEl = document.getElementById('readwrite')
   var resultEl = document.getElementById('result')
+
+  var readWriteEl = document.getElementById('readwrite')
+  var readOnlyEl = document.getElementById('readonly')
 
   var isComposing = false
   var previousComposition = ""
@@ -20,7 +23,7 @@
 
   rootEl.addEventListener('copy', function(e) {
     console.warn('copy')
-    if (readWriteEl.selectionStart === readWriteEl.selectionEnd) {
+    if (readOnlyEl.selectionStart === readOnlyEl.selectionEnd) {
       console.warn('quitting copy early to mimic browsers that require a non empty selection to copy')
       return
     }
@@ -30,7 +33,7 @@
 
   rootEl.addEventListener('cut', function(e) {
     console.warn('cut')
-    if (readWriteEl.selectionStart === readWriteEl.selectionEnd) {
+    if (readOnlyEl.selectionStart === readOnlyEl.selectionEnd) {
       console.warn('quitting copy early to mimic browsers that require a non empty selection to copy')
       return
     }
@@ -47,18 +50,18 @@
 
   function updateFocus() {
     console.warn('updating focus')
-    if (document.activeElement !== readWriteEl) {
-      readWriteEl.focus()
-    }
 
     if (isExpectingCopyCut) {
-      readWriteEl.value = " "
-      readWriteEl.selectionStart = 0
-      readWriteEl.selectionEnd = 1
+      if (document.activeElement !== readOnlyEl) {
+        readOnlyEl.focus()
+        readOnlyEl.value = " "
+        readOnlyEl.selectionStart = 0
+        readOnlyEl.selectionEnd = 1
+      }
     } else {
-      console.warn('clearing')
-      readWriteEl.focus()
-      readWriteEl.value = ""
+      if (document.activeElement !== readWriteEl) {
+        readWriteEl.focus()
+      }
     }
   }
 
@@ -88,10 +91,12 @@
     }
   })
 
-  readWriteEl.addEventListener('keyup', function(e) {
+  function keyUpCallback(e) {
     setExpectingCopyCut(false)
     setExpectingPaste(false)
-  })
+  }
+  readWriteEl.addEventListener('keyup', keyUpCallback)
+  readOnlyEl.addEventListener('keyup', keyUpCallback)
 
   readWriteEl.addEventListener('compositionstart', function (e) {
     console.warn('compositionstart')
