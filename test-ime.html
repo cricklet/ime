@@ -78,7 +78,7 @@
     updateFocus()
   }
 
-  function keyDownCallback(e) {
+  readWriteEl.addEventListener('keydown', function(e) {
     if (e.ctrlKey != 0 || e.metaKey != 0) {
       if (e.which === 'X'.charCodeAt() || e.which === 'C'.charCodeAt()) {
         setExpectingCopyCut(true)
@@ -86,32 +86,27 @@
         setExpectingPaste(true)
       }
     }
-  }
-  readWriteEl.addEventListener('keydown', keyDownCallback)
-  // readOnlyEl.addEventListener('keydown', keyDownCallback)
+  })
 
-  function keyUpCallback(e) {
+  readWriteEl.addEventListener('keyup', function(e) {
     setExpectingCopyCut(false)
     setExpectingPaste(false)
-  }
-
-  readWriteEl.addEventListener('keyup', keyUpCallback)
-  // readOnlyEl.addEventListener('keyup', keyUpCallback)
+  })
 
   readWriteEl.addEventListener('compositionstart', function (e) {
-    console.warn('compositionstart clearing element.value and composition')
+    console.warn('compositionstart')
     isComposing = true
     previousComposition = ""
     readWriteEl.value = ""
   })
 
   readWriteEl.addEventListener('compositionend', function (e) {
-    console.warn('compositionend done composing')
+    console.warn('compositionend')
     isComposing = false
   })
   
   readWriteEl.addEventListener('input', function (e) {
-    console.warn('input', 'element.value', readWriteEl.value, 'previous', previousComposition)
+    console.warn(`received value "${readWriteEl.value}", previous composition "${previousComposition}"`)
 
     if (previousComposition.length) {
       resultEl.innerHTML = resultEl.innerHTML
@@ -121,11 +116,11 @@
     
     if (isComposing) {
       previousComposition = readWriteEl.value
-      console.warn('input', 'is composing, so new previous composition is', readWriteEl.value)
+      console.warn('is composing, so new previous composition is', readWriteEl.value)
     } else {
       previousComposition = ""
       readWriteEl.value = ""
-      console.warn('was not composing, so clearing')
+      console.warn('was not composing, so clearing value & previous')
     }
     
     e.preventDefault()
